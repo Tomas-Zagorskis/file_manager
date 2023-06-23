@@ -2,10 +2,9 @@ import fs from 'fs';
 import path from 'path';
 import readLine from 'readline';
 import { stdin as input, stdout as output, argv } from 'process';
-import { fileURLToPath } from 'url';
+import { homedir } from 'os';
 
-const __filename = fileURLToPath(import.meta.url);
-let userPath = path.dirname(__filename);
+let userPath = homedir();
 
 const rl = readLine.createInterface({ input, output });
 
@@ -19,17 +18,15 @@ if (argv[2] && argv[2].startsWith('--username=')) {
 
 console.log(`\x1b[32mWelcome to the File Manager, ${username}!\n\x1b[0m`);
 console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
+console.log('\x1b[90mEnter your command in the line below\x1b[0m');
 
-rl.on('line', data => {
-	switch (data) {
+rl.on('line', async line => {
+	switch (line) {
 		case 'up':
 			userPath = path.resolve(userPath, '..');
 			break;
 		case 'ls':
-			fs.readdir(userPath, (err, files) => {
-				if (err) throw new Error('FS operation failed');
-				console.table(files);
-			});
+			await listDir();
 			break;
 		case '.exit':
 			rl.close();
@@ -40,8 +37,11 @@ rl.on('line', data => {
 			break;
 	}
 
-	if (data != '.exit') {
-		console.log(`\x1b[33m\nYou are currently in ${userPath}\x1b[0m`);
+	if (line != '.exit') {
+		setTimeout(() => {
+			console.log(`\x1b[33m\nYou are currently in ${userPath}\x1b[0m`);
+			console.log('\x1b[90mEnter your command in the line below\x1b[0m');
+		}, 10);
 	}
 });
 
@@ -50,3 +50,19 @@ rl.on('close', () =>
 		`\x1b[32m\nThank you for using File Manager, ${username}, goodbye!\x1b[0m`,
 	),
 );
+
+async function listDir() {
+	fs.readdir(userPath, { withFileTypes: true }, (err, files) => {
+		if (err) throw new Error('FS operation failed');
+		const dirent = files
+			.map(file => {
+				if (file.isDirectory()) return { Name: file.name, Type: 'directory' };
+				if (file.isFile()) return { Name: file.name, Type: 'file' };
+				if (file.isSymbolicLink())
+					return { Name: file.name, Type: 'symbolic link' };
+				return { Name: file.name, Type: 'other' };
+			})
+			.sort((a, b) => a.Type.localeCompare(b.Type));
+		console.table(dirent);
+	});
+}

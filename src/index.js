@@ -1,4 +1,4 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 import readLine from 'readline';
 import { stdin as input, stdout as output, argv } from 'process';
@@ -21,20 +21,28 @@ console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
 console.log('\x1b[90mEnter your command in the line below\x1b[0m');
 
 rl.on('line', async line => {
-	switch (line) {
-		case 'up':
-			userPath = path.resolve(userPath, '..');
-			break;
-		case 'ls':
-			await listDir();
-			break;
-		case '.exit':
-			rl.close();
-			break;
+	const opLine = line.split(' ');
+	try {
+		switch (opLine[0]) {
+			case 'up':
+				userPath = path.resolve(userPath, '..');
+				break;
+			case 'cd':
+				await changeDir(opLine[1]);
+				break;
+			case 'ls':
+				await listDir();
+				break;
+			case '.exit':
+				rl.close();
+				break;
 
-		default:
-			console.log('\x1b[31mInvalid input\x1b[0m');
-			break;
+			default:
+				console.log('\x1b[31mInvalid input\x1b[0m');
+				break;
+		}
+	} catch (error) {
+		console.log(`\x1b[31mERROR: ${error.message}\x1b[0m`);
 	}
 
 	if (line != '.exit') {
@@ -50,6 +58,18 @@ rl.on('close', () =>
 		`\x1b[32m\nThank you for using File Manager, ${username}, goodbye!\x1b[0m`,
 	),
 );
+
+async function changeDir(newPath) {
+	const goPath = path.resolve(userPath, newPath);
+	try {
+		const stat = await fs.stat(goPath);
+		if (stat.isDirectory()) userPath = goPath;
+		else throw new Error("given path isn't a directory");
+	} catch (error) {
+		if (error.message.startsWith('given')) throw error;
+		else throw new Error("directory doesn't exist");
+	}
+}
 
 async function listDir() {
 	fs.readdir(userPath, { withFileTypes: true }, (err, files) => {

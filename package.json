@@ -1,0 +1,16 @@
+{
+	"name": "file_manager",
+	"version": "1.0.0",
+	"description": "RSS file manager task",
+	"type": "module",
+	"main": "index.js",
+	"scripts": {
+		"start": "node src/index.js"
+	},
+	"keywords": [
+		"nodeJS",
+		"file-manager"
+	],
+	"author": "Tomas Zagorskis",
+	"license": "ISC"
+}

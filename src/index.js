@@ -1,3 +1,4 @@
+import fs from 'fs';
 import path from 'path';
 import readLine from 'readline';
 import { stdin as input, stdout as output, argv } from 'process';
@@ -23,6 +24,12 @@ rl.on('line', data => {
 	switch (data) {
 		case 'up':
 			userPath = path.resolve(userPath, '..');
+			break;
+		case 'ls':
+			fs.readdir(userPath, (err, files) => {
+				if (err) throw new Error('FS operation failed');
+				console.table(files);
+			});
 			break;
 		case '.exit':
 			rl.close();

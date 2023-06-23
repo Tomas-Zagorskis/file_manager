@@ -20,17 +20,26 @@ console.log(`\x1b[32mWelcome to the File Manager, ${username}!\n\x1b[0m`);
 console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
 
 rl.on('line', data => {
-	console.log(`Received: ${data}\n`);
-	if (data == 'up') userPath = path.resolve(userPath, '..');
-	if (data == '.exit') {
-		rl.close();
-	} else {
-		console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
+	switch (data) {
+		case 'up':
+			userPath = path.resolve(userPath, '..');
+			break;
+		case '.exit':
+			rl.close();
+			break;
+
+		default:
+			console.log('\x1b[31mInvalid input\x1b[0m');
+			break;
+	}
+
+	if (data != '.exit') {
+		console.log(`\x1b[33m\nYou are currently in ${userPath}\x1b[0m`);
 	}
 });
 
 rl.on('close', () =>
 	console.log(
-		`\x1b[32mThank you for using File Manager, ${username}, goodbye!\x1b[0m`,
+		`\x1b[32m\nThank you for using File Manager, ${username}, goodbye!\x1b[0m`,
 	),
 );

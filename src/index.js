@@ -29,14 +29,18 @@ rl.on('line', async line => {
 				userPath = path.resolve(userPath, '..');
 				break;
 			case 'cd':
-				if (opLine[2]) throw new Error('Invalid input');
+				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await changeDir(opLine[1]);
 				break;
 			case 'ls':
 				if (opLine[1]) throw new Error('Invalid input');
 				await listDir();
 				break;
-
+			// Basic operations with files
+			case 'cat':
+				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
+				await readFile(opLine[1]);
+				break;
 			case '.exit':
 				rl.close();
 				break;
@@ -77,7 +81,9 @@ async function changeDir(newPath) {
 
 async function listDir() {
 	try {
-		const fileList = await fs.readdir(userPath, { withFileTypes: false });
+		const fileList = await fs.readdir(userPath, {
+			withFileTypes: true,
+		});
 		const mappedFileList = fileList
 			.map(file => {
 				if (file.isDirectory()) return { Name: file.name, Type: 'directory' };
@@ -88,6 +94,26 @@ async function listDir() {
 			})
 			.sort((a, b) => a.Type.localeCompare(b.Type));
 		console.table(mappedFileList);
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function readFile(fileName) {
+	const toRead = path.resolve(userPath, fileName);
+	try {
+		const fd = await fs.open(toRead);
+		const stream = fd.createReadStream({ encoding: 'utf-8' });
+		stream.push(
+			`\x1b[95m\n------------${fileName}------------\n\x1b[0m`,
+			'utf-8',
+		);
+		stream.on('data', data => process.stdout.write(data));
+		stream.on('end', () =>
+			console.log(
+				'\x1b[95m\n-----------END OF READING FILE-------------\x1b[0m',
+			),
+		);
 	} catch {
 		throw new Error('Operation failed');
 	}

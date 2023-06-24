@@ -41,6 +41,10 @@ rl.on('line', async line => {
 				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await readFile(opLine[1]);
 				break;
+			case 'add':
+				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
+				await createFile(opLine[1]);
+				break;
 			case '.exit':
 				rl.close();
 				break;
@@ -114,6 +118,15 @@ async function readFile(fileName) {
 				'\x1b[95m\n-----------END OF READING FILE-------------\x1b[0m',
 			),
 		);
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function createFile(fileName) {
+	const toRead = path.resolve(userPath, fileName);
+	try {
+		await fs.open(toRead, 'wx');
 	} catch {
 		throw new Error('Operation failed');
 	}

@@ -45,6 +45,11 @@ rl.on('line', async line => {
 				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await createFile(opLine[1]);
 				break;
+			case 'rn':
+				if (opLine[3] || !opLine[2] || !opLine[1])
+					throw new Error('Invalid input');
+				await renameFile(opLine[1], opLine[2]);
+				break;
 			case '.exit':
 				rl.close();
 				break;
@@ -127,6 +132,16 @@ async function createFile(fileName) {
 	const toRead = path.resolve(userPath, fileName);
 	try {
 		await fs.open(toRead, 'wx');
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function renameFile(fileName, newFileName) {
+	const pathToFile = path.resolve(userPath, fileName);
+	const pathToNewFile = path.resolve(userPath, newFileName);
+	try {
+		await fs.rename(pathToFile, pathToNewFile);
 	} catch {
 		throw new Error('Operation failed');
 	}

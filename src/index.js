@@ -4,11 +4,10 @@ import readLine from 'readline';
 import { stdin as input, stdout as output, argv } from 'process';
 import { homedir } from 'os';
 
-let userPath = homedir();
+let username,
+	userPath = homedir();
 
 const rl = readLine.createInterface({ input, output });
-
-let username;
 
 if (argv[2] && argv[2].startsWith('--username=')) {
 	username = argv[2].split('=')[1];
@@ -24,6 +23,7 @@ rl.on('line', async line => {
 	const opLine = line.split(' ');
 	try {
 		switch (opLine[0]) {
+			// Navigation & working directory
 			case 'up':
 				userPath = path.resolve(userPath, '..');
 				break;
@@ -33,6 +33,7 @@ rl.on('line', async line => {
 			case 'ls':
 				await listDir();
 				break;
+
 			case '.exit':
 				rl.close();
 				break;
@@ -72,9 +73,9 @@ async function changeDir(newPath) {
 }
 
 async function listDir() {
-	fs.readdir(userPath, { withFileTypes: true }, (err, files) => {
-		if (err) throw new Error('FS operation failed');
-		const dirent = files
+	try {
+		const fileList = await fs.readdir(userPath, { withFileTypes: true });
+		const mappedFileList = fileList
 			.map(file => {
 				if (file.isDirectory()) return { Name: file.name, Type: 'directory' };
 				if (file.isFile()) return { Name: file.name, Type: 'file' };
@@ -83,6 +84,8 @@ async function listDir() {
 				return { Name: file.name, Type: 'other' };
 			})
 			.sort((a, b) => a.Type.localeCompare(b.Type));
-		console.table(dirent);
-	});
+		console.table(mappedFileList);
+	} catch {
+		throw new Error('FS operation failed');
+	}
 }

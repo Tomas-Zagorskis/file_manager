@@ -25,12 +25,15 @@ rl.on('line', async line => {
 		switch (opLine[0]) {
 			// Navigation & working directory
 			case 'up':
+				if (opLine[1]) throw new Error('Invalid input');
 				userPath = path.resolve(userPath, '..');
 				break;
 			case 'cd':
+				if (opLine[2]) throw new Error('Invalid input');
 				await changeDir(opLine[1]);
 				break;
 			case 'ls':
+				if (opLine[1]) throw new Error('Invalid input');
 				await listDir();
 				break;
 
@@ -39,7 +42,7 @@ rl.on('line', async line => {
 				break;
 
 			default:
-				console.log('\x1b[31mInvalid input\x1b[0m');
+				console.log('\x1b[31mERROR: Invalid input\x1b[0m');
 				break;
 		}
 	} catch (error) {
@@ -65,16 +68,16 @@ async function changeDir(newPath) {
 	try {
 		const stat = await fs.stat(goPath);
 		if (stat.isDirectory()) userPath = goPath;
-		else throw new Error("given path isn't a directory");
+		else throw new Error("Given path isn't a directory");
 	} catch (error) {
 		if (error.message.startsWith('given')) throw error;
-		else throw new Error("directory doesn't exist");
+		else throw new Error("Directory doesn't exist");
 	}
 }
 
 async function listDir() {
 	try {
-		const fileList = await fs.readdir(userPath, { withFileTypes: true });
+		const fileList = await fs.readdir(userPath, { withFileTypes: false });
 		const mappedFileList = fileList
 			.map(file => {
 				if (file.isDirectory()) return { Name: file.name, Type: 'directory' };
@@ -86,6 +89,6 @@ async function listDir() {
 			.sort((a, b) => a.Type.localeCompare(b.Type));
 		console.table(mappedFileList);
 	} catch {
-		throw new Error('FS operation failed');
+		throw new Error('Operation failed');
 	}
 }

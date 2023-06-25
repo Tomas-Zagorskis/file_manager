@@ -2,7 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import readLine from 'readline';
 import { stdin as input, stdout as output, argv } from 'process';
-import { homedir } from 'os';
+import { EOL, arch, cpus, homedir, userInfo } from 'os';
 
 let username,
 	userPath = homedir();
@@ -63,6 +63,43 @@ rl.on('line', async line => {
 			case 'rm':
 				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await deleteFile(opLine[1]);
+				break;
+			// Operating system info
+			case 'os':
+				if (opLine[2]) throw new Error('Invalid input');
+				switch (opLine[1]) {
+					case '--EOL':
+						console.log(
+							`\x1b[36mDefault End-Of-Line: ${JSON.stringify(EOL)}\x1b[0m`,
+						);
+						break;
+					case '--cpus':
+						const cpusInfo = cpus();
+						console.log(`\x1b[36mTotal CPU amount: ${cpusInfo.length}\x1b[0m`);
+						cpusInfo.forEach(cpu =>
+							console.log(
+								`\x1b[36mmodel: ${cpu.model}, rate: ${
+									cpu.speed / 1000
+								} GHz\x1b[0m`,
+							),
+						);
+						break;
+					case '--homedir':
+						console.log(`\x1b[36mHome directory: ${homedir()}\x1b[0m`);
+						break;
+					case '--username':
+						const user = userInfo();
+						console.log(`\x1b[36mUsername on system: ${user.username}\x1b[0m`);
+						break;
+					case '--architecture':
+						const architecture = arch();
+						console.log(
+							`\x1b[36mThe operating system CPU architecture: ${architecture}\x1b[0m`,
+						);
+						break;
+					default:
+						throw new Error('Invalid input');
+				}
 				break;
 			case '.exit':
 				rl.close();

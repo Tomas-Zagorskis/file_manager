@@ -20,7 +20,7 @@ console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
 console.log('\x1b[90mEnter your command in the line below\x1b[0m');
 
 rl.on('line', async line => {
-	const opLine = line.split(' ');
+	const opLine = line.trim().split(' ');
 	try {
 		switch (opLine[0]) {
 			// Navigation & working directory
@@ -55,13 +55,15 @@ rl.on('line', async line => {
 					throw new Error('Invalid input');
 				await copyFile(opLine[1], opLine[2]);
 				break;
+			case 'rm':
+				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
+				await deleteFile(opLine[1]);
+				break;
 			case '.exit':
 				rl.close();
 				break;
-
 			default:
-				console.log('\x1b[31mERROR: Invalid input\x1b[0m');
-				break;
+				throw new Error('Invalid input');
 		}
 	} catch (error) {
 		console.log(`\x1b[31mERROR: ${error.message}\x1b[0m`);
@@ -156,11 +158,24 @@ async function copyFile(copyPath, pastePath) {
 	const pathToCopyFiles = path.resolve(userPath, copyPath);
 	const pathToPasteFiles = path.resolve(userPath, pastePath);
 	try {
-		await fs.cp(pathToCopyFiles, pathToPasteFiles, {
-			recursive: true,
-			errorOnExist: true,
-			force: false,
-		});
+		const fdIn = await fs.open(pathToCopyFiles, 'r');
+		const readStream = fdIn.createReadStream();
+
+		const fdOut = await fs.open(pathToPasteFiles, 'wx');
+		const writeStream = fdOut.createWriteStream();
+
+		readStream.pipe(writeStream);
+		readStream.on('end', () => readStream.close());
+		writeStream.on('end', () => writeStream.close());
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function deleteFile(fileName) {
+	const toDelete = path.resolve(userPath, fileName);
+	try {
+		await fs.rm(toDelete);
 	} catch {
 		throw new Error('Operation failed');
 	}

@@ -50,6 +50,11 @@ rl.on('line', async line => {
 					throw new Error('Invalid input');
 				await renameFile(opLine[1], opLine[2]);
 				break;
+			case 'cp':
+				if (opLine[3] || !opLine[2] || !opLine[1])
+					throw new Error('Invalid input');
+				await copyFile(opLine[1], opLine[2]);
+				break;
 			case '.exit':
 				rl.close();
 				break;
@@ -142,6 +147,20 @@ async function renameFile(fileName, newFileName) {
 	const pathToNewFile = path.resolve(userPath, newFileName);
 	try {
 		await fs.rename(pathToFile, pathToNewFile);
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function copyFile(copyPath, pastePath) {
+	const pathToCopyFiles = path.resolve(userPath, copyPath);
+	const pathToPasteFiles = path.resolve(userPath, pastePath);
+	try {
+		await fs.cp(pathToCopyFiles, pathToPasteFiles, {
+			recursive: true,
+			errorOnExist: true,
+			force: false,
+		});
 	} catch {
 		throw new Error('Operation failed');
 	}

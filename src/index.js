@@ -55,6 +55,11 @@ rl.on('line', async line => {
 					throw new Error('Invalid input');
 				await copyFile(opLine[1], opLine[2]);
 				break;
+			case 'mv':
+				if (opLine[3] || !opLine[2] || !opLine[1])
+					throw new Error('Invalid input');
+				await moveFile(opLine[1], opLine[2]);
+				break;
 			case 'rm':
 				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await deleteFile(opLine[1]);
@@ -62,6 +67,7 @@ rl.on('line', async line => {
 			case '.exit':
 				rl.close();
 				break;
+
 			default:
 				throw new Error('Invalid input');
 		}
@@ -179,4 +185,9 @@ async function deleteFile(fileName) {
 	} catch {
 		throw new Error('Operation failed');
 	}
+}
+
+async function moveFile(fromPath, toPath) {
+	await copyFile(fromPath, toPath);
+	await deleteFile(fromPath);
 }

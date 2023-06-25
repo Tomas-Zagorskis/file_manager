@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import readLine from 'readline';
 import crypto from 'crypto';
+import zlib from 'zlib';
 import { stdin as input, stdout as output, argv } from 'process';
 import { EOL, arch, cpus, homedir, userInfo } from 'os';
 
@@ -106,6 +107,17 @@ rl.on('line', async line => {
 			case 'hash':
 				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
 				await calculateHash(opLine[1]);
+				break;
+			// Compress and decompress operations
+			case 'compress':
+				if (opLine[3] || !opLine[2] || !opLine[1])
+					throw new Error('Invalid input');
+				await compressFile(opLine[1], opLine[2]);
+				break;
+			case 'decompress':
+				if (opLine[3] || !opLine[2] || !opLine[1])
+					throw new Error('Invalid input');
+				await decompressFile(opLine[1], opLine[2]);
 				break;
 			case '.exit':
 				rl.close();
@@ -242,6 +254,42 @@ async function calculateHash(fileName) {
 		const hash = crypto.createHash('sha256');
 		const hashCode = hash.update(data).digest('hex');
 		console.log(`\x1b[36m${hashCode}\x1b[0m`);
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function compressFile(fileName, destinationName) {
+	const pathToFile = path.resolve(userPath, fileName);
+	const pathToNewFile = path.resolve(userPath, destinationName);
+	try {
+		const fdIn = await fs.open(pathToFile, 'r');
+		const input = fdIn.createReadStream();
+
+		const fdOut = await fs.open(pathToNewFile, 'wx');
+		const output = fdOut.createWriteStream();
+
+		const broZip = zlib.createBrotliCompress();
+
+		input.pipe(broZip).pipe(output);
+	} catch {
+		throw new Error('Operation failed');
+	}
+}
+
+async function decompressFile(fileName, destinationName) {
+	const pathToFile = path.resolve(userPath, fileName);
+	const pathToNewFile = path.resolve(userPath, destinationName);
+	try {
+		const fdIn = await fs.open(pathToFile, 'r');
+		const input = fdIn.createReadStream();
+
+		const fdOut = await fs.open(pathToNewFile, 'wx');
+		const output = fdOut.createWriteStream();
+
+		const broUnzip = zlib.createBrotliDecompress();
+
+		input.pipe(broUnzip).pipe(output);
 	} catch {
 		throw new Error('Operation failed');
 	}

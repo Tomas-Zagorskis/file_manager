@@ -1,6 +1,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import readLine from 'readline';
+import crypto from 'crypto';
 import { stdin as input, stdout as output, argv } from 'process';
 import { EOL, arch, cpus, homedir, userInfo } from 'os';
 
@@ -100,6 +101,11 @@ rl.on('line', async line => {
 					default:
 						throw new Error('Invalid input');
 				}
+				break;
+			// Hash calculation
+			case 'hash':
+				if (opLine[2] || !opLine[1]) throw new Error('Invalid input');
+				await calculateHash(opLine[1]);
 				break;
 			case '.exit':
 				rl.close();
@@ -227,4 +233,16 @@ async function deleteFile(fileName) {
 async function moveFile(fromPath, toPath) {
 	await copyFile(fromPath, toPath);
 	await deleteFile(fromPath);
+}
+
+async function calculateHash(fileName) {
+	const filePath = path.resolve(userPath, fileName);
+	try {
+		const data = await fs.readFile(filePath, 'utf8');
+		const hash = crypto.createHash('sha256');
+		const hashCode = hash.update(data).digest('hex');
+		console.log(`\x1b[36m${hashCode}\x1b[0m`);
+	} catch {
+		throw new Error('Operation failed');
+	}
 }

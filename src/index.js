@@ -22,7 +22,23 @@ console.log(`\x1b[33mYou are currently in ${userPath}\x1b[0m`);
 console.log('\x1b[90mEnter your command in the line below\x1b[0m');
 
 rl.on('line', async line => {
-	const opLine = line.trim().split(' ');
+	const opStrings = line.trim().split(' ');
+	let arg = [];
+	let opLine = [];
+	let isQuoted = false;
+	opStrings.forEach((str, index) => {
+		if (index === 0) return opLine.push(str);
+		if (!str.startsWith('"') && !isQuoted) return opLine.push(str);
+		if (str.startsWith('"')) isQuoted = true;
+		if (isQuoted) arg.push(str);
+		if (str.at(-1) === '"') {
+			isQuoted = false;
+			const argWithoutQuote = arg.join(' ').slice(1, -1);
+			opLine.push(argWithoutQuote);
+			arg = [];
+		}
+	});
+
 	try {
 		switch (opLine[0]) {
 			// Navigation & working directory
@@ -200,8 +216,9 @@ async function createFile(fileName) {
 	const toRead = path.resolve(userPath, fileName);
 	try {
 		await fs.open(toRead, 'wx');
-	} catch {
-		throw new Error('Operation failed');
+	} catch (err) {
+		throw err;
+		new Error('Operation failed');
 	}
 }
 

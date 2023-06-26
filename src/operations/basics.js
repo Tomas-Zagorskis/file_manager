@@ -18,6 +18,7 @@ export async function readFile(currentPath, fileName) {
 				'\x1b[95m\n-----------END OF READING FILE-------------\x1b[0m',
 			),
 		);
+		stream.on('close', () => fd.close());
 	} catch {
 		throw new Error(errorMessages.failed);
 	}
@@ -26,7 +27,8 @@ export async function readFile(currentPath, fileName) {
 export async function createFile(currentPath, fileName) {
 	const toRead = path.resolve(currentPath, fileName);
 	try {
-		await fs.open(toRead, 'wx');
+		const fd = await fs.open(toRead, 'wx');
+		await fd.close();
 	} catch {
 		throw new Error(errorMessages.failed);
 	}
@@ -53,8 +55,8 @@ export async function copyFile(currentPath, copyPath, pastePath) {
 		const writeStream = fdOut.createWriteStream();
 
 		readStream.pipe(writeStream);
-		readStream.on('end', () => readStream.close());
-		writeStream.on('end', () => writeStream.close());
+		readStream.on('close', () => fdIn.close());
+		writeStream.on('close', () => fdOut.close());
 	} catch {
 		throw new Error(errorMessages.failed);
 	}

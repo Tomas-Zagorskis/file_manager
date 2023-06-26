@@ -51,7 +51,8 @@ List of operations and their syntax:
     ls
     ```
     Example of how `ls` command output may look like  
-    ![ls output example](./ls-example.JPG)  
+     ![ls-example](https://github.com/Tomas-Zagorskis/file_manager/assets/94639268/2c8667dd-d0e7-4e12-914d-f792945bfa04)
+
 - Basic operations with files
     - Read file and print it's content in console (should be done using Readable stream): 
     ```bash
